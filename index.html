@@ -3740,11 +3740,21 @@ div.video-overlay.desktop-only-sistema {
     transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.display-large-card-video,
+.display-large-card:has(video) {
+    aspect-ratio: 16 / 9 !important;
+    background-color: transparent !important;
+    overflow: hidden !important;
+}
+
 .display-large-video {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    line-height: 0 !important;
+    border: none !important;
+    outline: none !important;
     transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -5626,6 +5636,11 @@ div.footer-copyright {
         aspect-ratio: 1.6;
     }
 
+    .display-large-card-video,
+    .display-large-card:has(video) {
+        aspect-ratio: 16 / 9 !important;
+    }
+
     .lamina-lampada-section {
         padding: 60px 0;
     }
@@ -7082,9 +7097,9 @@ A tecnologia de isolamento térmico da Trity cria uma camada isolante que impede
                     </div>
 
                     <!-- Sua Trity, do seu jeito -->
-                    <div class="display-split-top" style="margin-top: 80px; margin-bottom: 0;">
+                    <div class="display-split-top display-split-reverse" style="margin-top: clamp(40px, 6vw, 80px); margin-bottom: 0;">
                         <div class="display-split-left">
-                            <div class="display-large-card">
+                            <div class="display-large-card display-large-card-video">
                                 <video class="display-large-video" autoplay loop muted playsinline preload="auto">
                                     <source src="https://raw.githubusercontent.com/thyagoalves/garrafa-termica-trity-2-lp/main/assets/Trity2DL2.mp4" type="video/mp4">
                                 </video>
@@ -7124,7 +7139,7 @@ A tecnologia de isolamento térmico da Trity cria uma camada isolante que impede
             <!-- LÂMINA 05 (PARTE 2): TAMPA (IMAGEM À ESQUERDA, TEXTO À DIREITA - SEM CONTADOR) -->
             <section class="lamina-split-proj" style="width: 100%; background-color: #ffffff; padding: 60px 0; position: relative;">
                 <div class="section-container">
-                    <div class="display-split-top" style="margin-bottom: 0;">
+                    <div class="display-split-top display-split-reverse" style="margin-bottom: 0;">
                         <div class="display-split-left">
                             <div class="display-large-card">
                                 <img src="https://raw.githubusercontent.com/thyagoalves/garrafa-termica-trity-2-lp/main/assets/Trity2L6.jpg" alt="Tampa Trity 2" class="selim-img">
@@ -7380,6 +7395,7 @@ A tecnologia de isolamento térmico da Trity cria uma camada isolante que impede
 
 </body>
 </html>
+
 
 
 
