@@ -1,0 +1,16 @@
+# Large RAW files & backups
+RAW/
+*.psd
+assets/*.psd
+assets_original_backup/
+
+# Working / reference files
+LPVision5Smart.html
+index - Copia.html
+test_palette.js
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+*.tmp
+.vscode/

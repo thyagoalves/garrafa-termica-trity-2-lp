@@ -1,0 +1,286 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mosaico Horizontal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: palco sticky de 100vh. A página rola na vertical, a trilha (3 linhas de grid) desliza na horizontal.
+     Altura do scroll = altura da tela + (largura da trilha - largura da tela), calculada por JS. */
+  :root {
+    --bg: #E6E9E3;
+    --fg: #181C19;
+    --muted: #59635C;
+    --line: #C3C9C0;
+    --accent: #3447D1;
+    --ph-s: 30%;
+    --ph-l1: 72%;
+    --ph-l2: 60%;
+    --ph-fg: rgba(24, 28, 25, .72);
+    --ph-edge: rgba(255, 255, 255, .35);
+
+    --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-mono: 'DM Mono', ui-monospace, Menlo, monospace;
+
+    --g: 10px;
+    --H: clamp(18rem, calc(100vh - 9rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)), 56rem);
+    --rh: calc((var(--H) - 2 * var(--g)) / 3);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111412;
+      --fg: #E6E9E3;
+      --muted: #96A09A;
+      --line: #2A302C;
+      --accent: #93A2FF;
+      --ph-s: 26%;
+      --ph-l1: 34%;
+      --ph-l2: 22%;
+      --ph-fg: rgba(230, 233, 227, .72);
+      --ph-edge: rgba(255, 255, 255, .08);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111412;
+    --fg: #E6E9E3;
+    --muted: #96A09A;
+    --line: #2A302C;
+    --accent: #93A2FF;
+    --ph-s: 26%;
+    --ph-l1: 34%;
+    --ph-l2: 22%;
+    --ph-fg: rgba(230, 233, 227, .72);
+    --ph-edge: rgba(255, 255, 255, .08);
+    color-scheme: dark;
+  }
+
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-display); }
+
+  #mosaic { position: relative; }
+
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    flex-direction: column;
+    overflow: clip;
+  }
+
+  .head { flex: none; }
+  .head-in {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    padding-bottom: 14px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .head h1 {
+    margin: 0;
+    font-size: clamp(1.4rem, 1.1rem + 1.2vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .head p {
+    margin: 6px 0 0;
+    font: 400 11px/1.4 var(--font-mono);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .pct {
+    font: 500 13px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+    color: var(--accent);
+  }
+  .bar { height: 2px; background: var(--line); }
+  .bar i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform-origin: left center;
+    transform: scaleX(0);
+  }
+
+  .rail {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    overflow: clip;
+  }
+  .track {
+    display: flex;
+    flex: none;
+    gap: var(--g);
+    width: max-content;
+    height: var(--H);
+    will-change: transform;
+  }
+
+  /* Cada coluna é um grid de 3 linhas. Largura = altura da célula x proporção (--r). */
+  .col {
+    flex: none;
+    display: grid;
+    grid-template-rows: repeat(3, var(--rh));
+    gap: var(--g);
+    width: calc(var(--rh) * var(--r));
+  }
+  .col.t { width: calc(var(--H) * var(--r)); }   /* 1 imagem ocupando as 3 linhas */
+  .col.t .cell { grid-row: span 3; }
+  .col.m .cell:first-child { grid-row: span 2; }   /* 1 imagem de 2 linhas + 1 de 1 linha */
+  /* .col.s = 3 imagens de 1 linha cada (padrão) */
+
+  /* Placeholder. Para usar foto de verdade, ponha <img src="..." alt=""> dentro da .cell. */
+  .cell {
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+    background: linear-gradient(
+      150deg,
+      hsl(var(--h) var(--ph-s) var(--ph-l1)),
+      hsl(calc(var(--h) + 28) var(--ph-s) var(--ph-l2))
+    );
+    box-shadow: inset 0 0 0 1px var(--ph-edge);
+  }
+  .cell img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .cell::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    font: 400 10px/1 var(--font-mono);
+    letter-spacing: .06em;
+    color: var(--ph-fg);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<section id="mosaic" aria-label="Mosaico de imagens">
+  <div class="stage">
+    <header class="head">
+      <div class="head-in">
+        <div>
+          <h1>Mosaico horizontal</h1>
+          <p>16 imagens · grade de 3 linhas · role para a página andar de lado</p>
+        </div>
+        <div class="pct" id="pct" aria-hidden="true">000%</div>
+      </div>
+      <div class="bar" aria-hidden="true"><i id="fill"></i></div>
+    </header>
+
+    <div class="rail">
+      <div class="track" id="track">
+
+        <div class="col t" style="--r:.75">
+          <div class="cell" style="--h:18"></div>
+        </div>
+
+        <div class="col s" style="--r:1.35">
+          <div class="cell" style="--h:205"></div>
+          <div class="cell" style="--h:42"></div>
+          <div class="cell" style="--h:160"></div>
+        </div>
+
+        <div class="col t" style="--r:.667">
+          <div class="cell" style="--h:290"></div>
+        </div>
+
+        <div class="col m" style="--r:1.45">
+          <div class="cell" style="--h:95"></div>
+          <div class="cell" style="--h:330"></div>
+        </div>
+
+        <div class="col s" style="--r:1.6">
+          <div class="cell" style="--h:230"></div>
+          <div class="cell" style="--h:12"></div>
+          <div class="cell" style="--h:130"></div>
+        </div>
+
+        <div class="col m" style="--r:1.8">
+          <div class="cell" style="--h:270"></div>
+          <div class="cell" style="--h:55"></div>
+        </div>
+
+        <div class="col s" style="--r:1.1">
+          <div class="cell" style="--h:185"></div>
+          <div class="cell" style="--h:350"></div>
+          <div class="cell" style="--h:80"></div>
+        </div>
+
+        <div class="col t" style="--r:.8">
+          <div class="cell" style="--h:215"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var section = document.getElementById('mosaic');
+  var stage = section.querySelector('.stage');
+  var track = document.getElementById('track');
+  var fill = document.getElementById('fill');
+  var pct = document.getElementById('pct');
+  var cells = track.querySelectorAll('.cell');
+  var travel = 0;
+  var ticking = false;
+
+  function measure() {
+    // Quanto a trilha precisa andar: largura total menos a largura da tela.
+    travel = Math.max(0, track.offsetWidth - stage.clientWidth);
+    // A seção precisa de exatamente esse tanto de scroll extra além da tela fixa.
+    section.style.height = (stage.clientHeight + travel) + 'px';
+
+    cells.forEach(function (c, i) {
+      var r = c.getBoundingClientRect();
+      var n = String(i + 1).padStart(2, '0');
+      c.setAttribute('data-label', n + '  ' + Math.round(r.width) + '×' + Math.round(r.height));
+    });
+    update();
+  }
+
+  function update() {
+    ticking = false;
+    var span = section.offsetHeight - stage.clientHeight;
+    var top = section.getBoundingClientRect().top;
+    // p vai de 0 (seção encostou no topo) a 1 (fim da seção chegou no rodapé).
+    var p = span > 0 ? Math.min(1, Math.max(0, -top / span)) : 0;
+    track.style.transform = 'translate3d(' + (-p * travel).toFixed(2) + 'px,0,0)';
+    fill.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    pct.textContent = String(Math.round(p * 100)).padStart(3, '0') + '%';
+  }
+
+  function onScroll() {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', measure);
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(track);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  measure();
+})();
+</script>
+
+</body></html>
